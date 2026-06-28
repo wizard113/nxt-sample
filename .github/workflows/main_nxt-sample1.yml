@@ -60,7 +60,7 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'nxt-sample'
+          app-name: 'nxt-sample1'
           slot-name: 'Production'
           package: . # 현재 디렉토리 구조 그대로 Azure 루트(wwwroot)에 업로드
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_8BB737B69429478385EB0E4A4EDF8FBC }}
