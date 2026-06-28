@@ -6,7 +6,8 @@ export default function Home() {
     <div className={styles.page}>
       <main className={styles.main}>
         <div className={styles.intro}>
-          <h1>Next.js app service github action 코드 배포2</h1>
+          <h3>Next.js app service github action 코드 배포3=================</h3>
+          <h3>Next.js app service github action 코드 배포3=================</h3>
         </div>
         <div className={styles.ctas}>
           <a
