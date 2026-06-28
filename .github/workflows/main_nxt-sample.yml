@@ -32,7 +32,7 @@ jobs:
           cp -r public next-deploy/public
           cp package.json next-deploy/package.json
           cp package-lock.json next-deploy/package-lock.json
-          cp next.config.* next-deploy/next.config.*
+          cp next.config.ts next-deploy/next.config.ts
 
       # 모아둔 폴더 자체를 아티팩트로 업로드
       - name: Upload artifact for deployment job
