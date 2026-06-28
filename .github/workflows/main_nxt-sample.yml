@@ -1,3 +1,6 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
 name: Build and deploy Next.js app to Azure Web App - nxt-sample
 
 on:
@@ -9,52 +12,56 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Node.js version
+        uses: actions/setup-node@v4 # 최신 v4 버전으로 변경
         with:
-          node-version: 24.x
-          cache: npm
+          node-version: '24.x'
+          cache: 'npm' # npm 캐시를 활성화하여 빌드 속도 향상
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build Next.js
-        run: npm run build
-
-      - name: Remove unnecessary files
+      - name: Install dependencies, build, and test
         run: |
-          rm -rf .git
-          rm -rf .github
-          rm -rf node_modules
+          npm ci                   # 프로덕션 환경에 최적화된 설치 (npm install 대신 권장)
+          npm run build
+          # npm run test --if-present # 테스트가 필요하다면 주석을 해제하세요.
 
-      - name: Upload deployment artifact
+      # Azure App Service 구동에 필요한 핵심 파일들만 압축하여 아티팩트로 업로드
+      - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: next-app
-          path: .
+          name: node-app
+          path: |
+            .next
+            public
+            package.json
+            package-lock.json
+            next.config.js
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
 
     steps:
-      - name: Download artifact
+      - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: next-app
+          name: node-app
+          path: . # 현재 디렉토리에 다운로드
 
-      - name: Deploy to Azure Web App
+      # 배포된 서버(Azure) 내에서 프로덕션용 패키지만 빠르게 설치
+      - name: Install production dependencies
+        run: npm ci --omit=dev
+
+      - name: 'Deploy to Azure Web App'
+        id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: nxt-sample
-          slot-name: Production
+          app-name: 'nxt-sample'
+          slot-name: 'Production'
           package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_B317747C689F42C7A70418C9C35C6ED6 }}
