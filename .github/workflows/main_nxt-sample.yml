@@ -24,17 +24,17 @@ jobs:
           npm ci
           npm run build
 
-      # 임시 폴더(next-deploy)를 만들어 배포할 핵심 파일들만 한곳에 깔끔하게 모으기
+      # standalone 빌드 결과물과 정적 파일들을 하나의 배포용 폴더에 깔끔하게 수집
+      # 파일들을 'next-deploy' 내부에 모으는 것이 아니라, 내부 파일들을 아티팩트로 바로 올리기 위함입니다.
       - name: Prepare deployment files
         run: |
           mkdir next-deploy
-          cp -r .next next-deploy/.next
-          cp -r public next-deploy/public
-          cp package.json next-deploy/package.json
-          cp package-lock.json next-deploy/package-lock.json
-          cp next.config.ts next-deploy/next.config.ts
+          cp -r .next/standalone/* next-deploy/
+          mkdir -p next-deploy/public next-deploy/.next/static
+          cp -r public/* next-deploy/public/ 2>/dev/null || echo "No public folder"
+          cp -r .next/static/* next-deploy/.next/static/
 
-      # 모아둔 폴더 자체를 아티팩트로 업로드
+      # 중요: path를 'next-deploy/'가 아닌 'next-deploy' 안의 내용물들만 지정하여 업로드합니다.
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
@@ -44,17 +44,17 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    # environment: production
 
     steps:
+      # 이제 다운로드하면 현재 루트(.) 자리에 바로 server.js, .next, public 등이 깔끔하게 풀립니다.
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: node-app
-          path: . # 현재 작업 디렉토리에 바로 다운로드 (여기안에 .next, public 등이 풀림)
+          path: .
 
-      - name: Install production dependencies
-        run: npm ci --omit=dev
+      # standalone 방식은 이미 프로덕션에 필요한 최소한의 node_modules가 포함되어 있어
+      # 별도의 npm ci --omit=dev를 돌릴 필요가 없습니다. (배포 속도 대폭 향상)
 
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
@@ -62,5 +62,5 @@ jobs:
         with:
           app-name: 'nxt-sample'
           slot-name: 'Production'
-          package: . # 현재 디렉토리 구조 그대로 Azure 루트(wwwroot)에 업로드
+          package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_B317747C689F42C7A70418C9C35C6ED6 }}
